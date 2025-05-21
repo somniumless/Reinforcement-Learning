@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultados del Agente</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+    <h1>Resultados del Entrenamiento</h1>
+    <nav>
+        <a href="/">Inicio</a>
+        <a href="/results">Ver Resultados</a>
+    </nav>
+    <section>
+        <h2>Gráfico de recompensas por episodio</h2>
+        <img src="{{ url_for('static', filename='rewards_plot.png') }}" alt="Gráfico de recompensas">
+    </section>
+</body>
+</html>
