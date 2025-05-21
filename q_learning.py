@@ -1,38 +1,37 @@
-# q_learning.py
 import numpy as np
-import gym
+import pickle
 
-def train_q_learning(episodes=1000, alpha=0.1, gamma=0.99, epsilon=0.1):
-    env = gym.make("FrozenLake-v1", is_slippery=False)
-    n_states = env.observation_space.n
-    n_actions = env.action_space.n
+class QLearning:
+    def __init__(self, state_size, action_size):
+        self.state_size = state_size
+        self.action_size = action_size
+        self.q_table = np.zeros((state_size, action_size))
+        self.alpha = 0.1
+        self.gamma = 0.95
+        self.epsilon = 1.0
+        self.epsilon_min = 0.01
+        self.epsilon_decay = 0.995
 
-    Q = np.zeros((n_states, n_actions))
-    rewards_per_episode = []
+    def act(self, state):
+        if np.random.rand() <= self.epsilon:
+            return np.random.choice(self.action_size)
+        return np.argmax(self.q_table[state])
 
-    for episode in range(episodes):
-        state = env.reset()[0]
-        done = False
-        total_reward = 0
+    def train(self, state, action, reward, next_state, done):
+        current_q = self.q_table[state, action]
+        max_next_q = np.max(self.q_table[next_state]) if not done else 0
+        new_q = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
+        self.q_table[state, action] = new_q
+        if done:
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
-        while not done:
-            if np.random.uniform(0, 1) < epsilon:
-                action = env.action_space.sample()
-            else:
-                action = np.argmax(Q[state])
+    def save(self, filename="q_table.pkl"):
+        with open(filename, 'wb') as f:
+            pickle.dump(self.q_table, f)
 
-            next_state, reward, done, _, _ = env.step(action)
-            Q[state, action] = Q[state, action] + alpha * (
-                reward + gamma * np.max(Q[next_state]) - Q[state, action]
-            )
-            state = next_state
-            total_reward += reward
-
-        rewards_per_episode.append(total_reward)
-
-    # Guardamos los resultados
-    np.save("rewards.npy", rewards_per_episode)
-    return Q, rewards_per_episode
-
-if __name__ == "__main__":
-    train_q_learning()
+    def load(self, filename="q_table.pkl"):
+        try:
+            with open(filename, 'rb') as f:
+                self.q_table = pickle.load(f)
+        except FileNotFoundError:
+            print("No se encontró el archivo Q-table. Inicializando nueva tabla.")

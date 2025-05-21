@@ -1,33 +1,40 @@
-# app.py
-from flask import Flask, render_template
-import matplotlib.pyplot as plt
-import numpy as np
-import os
+from flask import render_template
 
-app = Flask(__name__)
+@app.route("/results")
+def show_results():
+    # Simulación de datos (reemplaza con tus datos reales)
+    rewards = [10, 20, 15, 30, 25]  # Ejemplo: recompensas por episodio
+    portfolio_values = [10000, 10500, 11000, 11500, 12000]  # Ejemplo: evolución del balance
+    
+    return render_template(
+        "resultado.html",
+        rewards=rewards,
+        portfolio_values=portfolio_values
+    )
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route("/train", methods=["POST"])
+def train():
+    episodes = int(request.form.get("episodes", 100))
+    rewards = []
+    portfolio_values = []
 
-@app.route('/results')
-def results():
-    if not os.path.exists("rewards.npy"):
-        return "Primero ejecuta q_learning.py para entrenar el agente."
+    for episode in range(episodes):
+        state = env.reset()
+        done = False
+        episode_reward = 0
+        
+        while not done:
+            action = agent.act(state)
+            next_state, reward, done, _ = env.step(action)
+            agent.train(state, action, reward, next_state, done)
+            state = next_state
+            episode_reward += reward
+            portfolio_values.append(env.balance + (env.shares_held * env.current_price))  # Guarda el valor del portafolio
 
-    rewards = np.load("rewards.npy")
+        rewards.append(episode_reward)
 
-    plt.figure(figsize=(10, 4))
-    plt.plot(rewards, label="Recompensa por episodio")
-    plt.xlabel("Episodio")
-    plt.ylabel("Recompensa")
-    plt.title("Entrenamiento del Agente Q-Learning")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig("static/rewards_plot.png")
-    plt.close()
-
-    return render_template("resultado.html")
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    return jsonify({
+        "status": "success",
+        "rewards": rewards,
+        "portfolio_values": portfolio_values
+    })

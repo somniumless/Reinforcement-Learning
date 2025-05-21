@@ -1,18 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Resultados del Agente</title>
-    <link rel="stylesheet" href="../static/css/style.css">
+    <title>Resultados del Entrenamiento</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .plot-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
     <h1>Resultados del Entrenamiento</h1>
-    <nav>
-        <a href="/">Inicio</a>
-        <a href="/results">Ver Resultados</a>
-    </nav>
-    <section>
-        <h2>Gráfico de recompensas por episodio</h2>
-        <img src="{{ url_for('static', filename='rewards_plot.png') }}" alt="Gráfico de recompensas">
-    </section>
+    <div id="rewards-plot" class="plot-container"></div>
+    <div id="portfolio-plot" class="plot-container"></div>
+
+    <script>
+        // Datos pasados desde Flask (ejemplo estático)
+        const rewards = {{ rewards|tojson|safe }};
+        const portfolioValues = {{ portfolio_values|tojson|safe }};
+
+        // Gráfico de recompensas por episodio
+        Plotly.newPlot('rewards-plot', [{
+            y: rewards,
+            type: 'line',
+            name: 'Recompensa',
+            line: {color: 'blue'}
+        }], {
+            title: 'Recompensas por Episodio',
+            xaxis: {title: 'Episodio'},
+            yaxis: {title: 'Recompensa'}
+        });
+
+        // Gráfico del valor del portafolio
+        Plotly.newPlot('portfolio-plot', [{
+            y: portfolioValues,
+            type: 'line',
+            name: 'Balance',
+            line: {color: 'green'}
+        }], {
+            title: 'Evolución del Portafolio',
+            xaxis: {title: 'Paso'},
+            yaxis: {title: 'Valor ($)'}
+        });
+    </script>
 </body>
 </html>
